@@ -17,6 +17,7 @@ pub enum TokenType {
     Bang,
     BangEqual,
     Equal,
+    EqualEqual,
     NotEqual,
     Greater,
     GreaterEqual,
@@ -42,11 +43,13 @@ pub enum TokenType {
     Let,
     Const,
     While,
+
+    EOF,
 }
 
 #[derive(Debug)]
 pub enum Literal {
-    String(string),
+    String(String),
     Integer(u64),
     Float(f64),
 }
@@ -84,7 +87,7 @@ impl Lexer {
                 ("false".to_string(), TokenType::False),
                 ("fn".to_string(), TokenType::Fn),
                 ("for".to_string(), TokenType::For),
-                ("if".to_string(), Token::If),
+                ("if".to_string(), TokenType::If),
                 ("null".to_string(), TokenType::Null),
                 ("print".to_string(), TokenType::Print),
                 ("return".to_string(), TokenType::Return),
@@ -126,7 +129,6 @@ impl Lexer {
         match c {
             ')' => self.add_token(TokenType::RightParen),
             '(' => self.add_token(TokenType::LeftParen),
-            ')' => self.add_token(TokenType::RightParen),
             '{' => self.add_token(TokenType::LeftBrace),
             '}' => self.add_token(TokenType::RightBrace),
             ',' => self.add_token(TokenType::Comma),
@@ -154,7 +156,7 @@ impl Lexer {
                 let token_type = if self.match_char('=') {
                     TokenType::GreaterEqual
                 } else {
-                    TokenType::Grater
+                    TokenType::Greater
                 };
             }
             '<' => {
@@ -204,7 +206,7 @@ impl Lexer {
         c
     }
 
-    fn add_token(&mut self, token_type: Token) {
+    fn add_token(&mut self, token_type: TokenType) {
         self.add_token_with_literal(token_type, None)
     }
 
@@ -223,7 +225,7 @@ impl Lexer {
         if self.is_at_end() {
             return false;
         }
-        if self.source().chars().nth(self.current).unwrap() != c {
+        if self.source.chars().nth(self.current).unwrap() != c {
             return false;
         }
 
@@ -239,7 +241,7 @@ impl Lexer {
         self.source.chars().nth(self.current).unwrap()
     }
 
-    fn String(&mut self) -> Result<(), String> {
+    fn string(&mut self) -> Result<(), String> {
         while self.peek() != '"' && !self.is_at_end() {
             if self.peek() == '\n' {
                 self.line += 1;
@@ -258,7 +260,7 @@ impl Lexer {
         let value = self.source[self.start + 1..self.current - 1].to_string();
         self.add_token_with_literal(TokenType::String, Some(Literal::String(value)));
 
-        OK(())
+        Ok(())
     }
 
     fn number(&mut self) -> Result<(), String> {
