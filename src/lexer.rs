@@ -1,11 +1,14 @@
+use std::collections::HashMap;
+
 #[derive(Debug, Clone, Copy)]
 pub enum Literal {
     Integer(u64),
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub struct Token {
     pub token_type: TokenType,
+    pub lexeme: Option<String>,
     pub line: usize,
     pub column: usize,
     pub value: Option<Literal>,
@@ -18,8 +21,10 @@ pub enum TokenType {
     Mul,
     Div,
 
+    Identifier,
     Integer,
 
+    Print,
     EOF,
 }
 
@@ -30,6 +35,7 @@ pub struct Lexer {
     current: usize,
     line: usize,
     column: usize,
+    keywords: HashMap<String, TokenType>,
 }
 
 impl Lexer {
@@ -41,6 +47,11 @@ impl Lexer {
             current: 0,
             line: 1,
             column: 1,
+            keywords: {
+                let mut keywords = HashMap::new();
+                keywords.insert(String::from("print"), TokenType::Print);
+                keywords
+            },
         }
     }
 
@@ -52,6 +63,7 @@ impl Lexer {
 
         self.tokens.push(Token {
             token_type: TokenType::EOF,
+            lexeme: None,
             line: self.line,
             column: self.column,
             value: None,
@@ -96,6 +108,7 @@ impl Lexer {
         let text = &self.source[self.start..self.current];
         self.tokens.push(Token {
             token_type: token_type,
+            lexeme: Some(text.to_string()),
             line: self.line,
             column: self.column,
             value: none,
@@ -119,5 +132,12 @@ impl Lexer {
         }
 
         self.source.chars().nth(self.current).unwrap()
+    }
+
+    fn identifier(&mut self) {
+        while self.peek().is_alphanumeric() || self.peek() == '_' {
+            self.advance();
+        }
+        let text = &self.source[self.start..self.current];
     }
 }
