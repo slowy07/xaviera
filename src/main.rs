@@ -41,7 +41,7 @@ fn interpre(node: Node) -> i64 {
 }
 
 fn main() {
-    let source = String::from("2 + 3 * 5 - 8 / 3");
+    let source = String::from("2 + 3 + 4 * 5 / 2;");
     let mut lexer = lexer::Lexer::new(source);
     let tokens = lexer.scan_tokens();
     let mut parser = parser::Parser::new(tokens.clone());
