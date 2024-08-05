@@ -25,6 +25,9 @@ pub enum TokenType {
     Integer,
 
     Print,
+    LeftParen,
+    RightParen,
+    Semicolon,
     EOF,
 }
 
@@ -83,6 +86,9 @@ impl Lexer {
             '+' => self.add_token(TokenType::Add),
             '-' => self.add_token(TokenType::Sub),
             '*' => self.add_token(TokenType::Mul),
+            '(' => self.add_token(TokenType::LeftParen),
+            ')' => self.add_token(TokenType::RightParen),
+            ';' => self.add_token(TokenType::Semicolon),
             '/' => self.add_token(TokenType::Div),
             ' ' | '\t' | '\r' => {}
             '\n' => {
