@@ -90,6 +90,7 @@ impl Lexer {
                 self.column = 1;
             }
             c if c.is_digit(10) => self.number(),
+            c if c.is_alphabetic() || c == '_' => self.identifier(),
             _ => panic!("Unexpected character: {}", c),
         }
     }
@@ -139,5 +140,8 @@ impl Lexer {
             self.advance();
         }
         let text = &self.source[self.start..self.current];
+        let token_type = self.keywords.get(text).unwrap_or(&TokenType::Identifier);
+
+        self.add_token(*token_type);
     }
 }
