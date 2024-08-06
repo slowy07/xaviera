@@ -7,6 +7,10 @@ mod lexer;
 mod parser;
 
 fn main() {
-    let source = String::from("print 2 + 4 * 3 / 2;");
+    let source = String::from(
+        "print 12 + 3;
+         print 18 - 1;
+         print 22 + 2;"
+    );
     let mut lexer = lexer::Lexer::new(source);
 }
