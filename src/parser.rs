@@ -37,22 +37,26 @@ impl Parser {
         if self.match_token(vec![TokenType::Print]) {
             return self.print_statement();
         } else {
-            panic!("expected print at line {} column {}", self.peek().line, self.peek().column);
+            panic!(
+                "expected print at line {} column {}",
+                self.peek().line,
+                self.peek().column
+            );
         }
     }
 
     fn print_statement(&mut self) -> Node {
+        self.expect(vec![TokenType::LeftParen]);
         let expr = self.expression();
+        self.expect(vec![TokenType::RightParen]);
+        self.expect(vec![TokenType::SemiColon]);
         Node::PrintStmt {
-            expr: Box::new(expr)
+            expr: Box::new(expr),
         }
     }
 
     fn expression(&mut self) -> Node {
         let node = self.addition_expr();
-        if !self.match_token(vec![TokenType::SemiColon]) {
-            panic!("expected semicolon at {} column {}", self.peek().line, self.peek().column);
-        }
         node
     }
 
@@ -111,6 +115,20 @@ impl Parser {
         }
 
         false
+    }
+
+    fn expect(&mut self, tokens: Vec<TokenType>) -> Token {
+        for token in &tokens {
+            if self.check(*token) {
+                return self.advance();
+            }
+        }
+        panic!(
+            "expected {:?} at line {} column {}",
+            tokens,
+            self.peek().line,
+            self.peek().column
+        );
     }
 
     fn check(&self, token_type: TokenType) -> bool {
