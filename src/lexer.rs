@@ -1,8 +1,9 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum Literal {
     Integer(u64),
+    Identifier(String),
 }
 
 #[derive(Debug, Clone)]
@@ -23,11 +24,14 @@ pub enum TokenType {
 
     Identifier,
     Integer,
+    Int,
+    Let,
 
     Print,
     LeftParen,
     RightParen,
     SemiColon,
+    Assign,
     EOF,
 }
 
@@ -52,6 +56,8 @@ impl Lexer {
             column: 1,
             keywords: {
                 let mut keywords = HashMap::new();
+                keywords.insert(String::from("int"), TokenType::Int);
+                keywords.insert(String::from("let"), TokenType::Let);
                 keywords.insert(String::from("print"), TokenType::Print);
                 keywords
             },
@@ -89,6 +95,7 @@ impl Lexer {
             '(' => self.add_token(TokenType::LeftParen),
             ')' => self.add_token(TokenType::RightParen),
             ';' => self.add_token(TokenType::SemiColon),
+            '=' => self.add_token(TokenType::Assign),
             '/' => self.add_token(TokenType::Div),
             ' ' | '\t' | '\r' => {}
             '\n' => {
@@ -147,7 +154,10 @@ impl Lexer {
         }
         let text = &self.source[self.start..self.current];
         let token_type = self.keywords.get(text).unwrap_or(&TokenType::Identifier);
-
-        self.add_token(*token_type);
+        if *token_type == TokenType::Identifier {
+            self.add_token_literal(*token_type, Some(Literal::Identifier(text.to_string())));
+        } else {
+            self.add_token(*token_type);
+        }
     }
 }

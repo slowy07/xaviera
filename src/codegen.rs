@@ -35,6 +35,7 @@ impl CodeGen {
         match node {
             Node::LiteralExpr { value } => match value {
                 crate::lexer::Literal::Integer(i) => self.load(i as i64),
+                crate::lexer::Literal::Identifier(i) => self.load_global(i),
             },
             Node::BinaryExpr {
                 left,
@@ -64,9 +65,20 @@ impl CodeGen {
                 }
             }
 
-            Node::PrintStmt {expr} => {
+            Node::PrintStmt { expr } => {
                 let register = self.generate_node(*expr);
                 self.printint(register);
+                register
+            }
+
+            Node::GlobalVar { identifier } => {
+                self.define_global(identifier.lexeme.unwrap());
+                0
+            }
+
+            Node::AssignStmt { identifier, expr } => {
+                let register = self.generate_node(*expr);
+                self.store(register, identifier.lexeme.unwrap());
                 register
             }
         }
@@ -108,6 +120,27 @@ impl CodeGen {
         self.assembly
             .push_str(&format!("\tmovq\t${}, {}\n", value, REGISTER_NAMES[r]));
         r
+    }
+
+    fn load_global(&mut self, identifier: String) -> usize {
+        let r = self.allocate_register();
+        self.assembly.push_str(&format!(
+            "\tmovq\t{}(%rip), {}\n",
+            identifier, REGISTER_NAMES[r]
+        ));
+        r
+    }
+
+    fn store(&mut self, register: usize, identifier: String) {
+        self.assembly.push_str(&format!(
+            "\tmovq\t{}, {}(%rip)\n",
+            REGISTER_NAMES[register], identifier
+        ));
+    }
+
+    fn define_global(&mut self, identifier: String) {
+        self.assembly
+            .push_str(&format!("\t.comm\t{}, 8, 8\n", identifier));
     }
 
     fn add(&mut self, left: usize, right: usize) -> usize {
